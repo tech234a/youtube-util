@@ -1,5 +1,5 @@
 from requests import session
-from youtube_utils import getinitialdata, fullyexpand
+from youtube_util import getinitialdata, fullyexpand
 
 # TODO: Rate limit detection, HTTP3?
 
