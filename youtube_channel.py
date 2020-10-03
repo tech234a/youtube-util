@@ -1,17 +1,13 @@
 from requests import session
-from youtube_util import getinitialdata, fullyexpand
-
-# TODO: Rate limit detection, HTTP3?
+from youtube_util import getinitialdata, fullyexpand, getapikey, getlver
 
 mysession = session()
 #extract latest version automatically
-try:
-    lver = getinitialdata(mysession.get("https://www.youtube.com/").text)["responseContext"]["serviceTrackingParams"][2]["params"][2]["value"]
-except:
-    lver = "2.20201002.02.01"
+homepage = mysession.get("https://www.youtube.com/").text
+
 
 #print(lver)
-mysession.headers.update({"x-youtube-client-name": "1", "x-youtube-client-version": lver, "Accept-Language": "en-US"})
+mysession.headers.update({"x-youtube-client-name": "1", "x-youtube-client-version": getlver(getinitialdata(homepage)), "Accept-Language": "en-US"})
 
 def main(channelid: str):
     playlists = set()
@@ -42,7 +38,7 @@ def main(channelid: str):
         if "shelfRenderer" in itemint.keys():
             shelfres.add(itemint["shelfRenderer"]["title"]["runs"][0]["navigationEndpoint"]["commandMetadata"]["webCommandMetadata"]["url"])
         elif "gridRenderer" in itemint.keys():
-            playlistsint = fullyexpand(itemint["gridRenderer"])["items"]
+            playlistsint = fullyexpand(itemint["gridRenderer"], mysession)["items"]
 
             for playlist in playlistsint:
                 playlists.add(playlist["gridPlaylistRenderer"]["playlistId"])
@@ -51,7 +47,7 @@ def main(channelid: str):
 
     for item in shelfres:
         shelfiteminitdata = getinitialdata(mysession.get("https://www.youtube.com/"+str(item)).text)
-        playlistsint = fullyexpand(shelfiteminitdata["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][PLAYLISTS_ID]["tabRenderer"]["content"]["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"][0]["gridRenderer"])["items"]
+        playlistsint = fullyexpand(shelfiteminitdata["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][PLAYLISTS_ID]["tabRenderer"]["content"]["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"][0]["gridRenderer"], mysession)["items"]
 
         for playlist in playlistsint:
             playlists.add(playlist["gridPlaylistRenderer"]["playlistId"])
@@ -70,14 +66,14 @@ def main(channelid: str):
         if "shelfRenderer" in itemint.keys():
             cshelfres.add(itemint["shelfRenderer"]["title"]["runs"][0]["navigationEndpoint"]["commandMetadata"]["webCommandMetadata"]["url"])
         elif "gridRenderer" in itemint.keys():
-            chanlistint = fullyexpand(itemint["gridRenderer"])["items"]
+            chanlistint = fullyexpand(itemint["gridRenderer"], mysession)["items"]
 
             for channel in chanlistint:
                 channellist.add(channel["gridChannelRenderer"]["channelId"])
 
     for item in cshelfres:
         shelfiteminitdata = getinitialdata(mysession.get("https://www.youtube.com/"+str(item)).text)
-        chanlistint = fullyexpand(shelfiteminitdata["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][CHANNELS_ID]["tabRenderer"]["content"]["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"][0]["gridRenderer"])["items"]
+        chanlistint = fullyexpand(shelfiteminitdata["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][CHANNELS_ID]["tabRenderer"]["content"]["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"][0]["gridRenderer"], mysession)["items"]
 
         for channel in chanlistint:
             channellist.add(channel["gridChannelRenderer"]["channelId"])
