@@ -1,0 +1,10 @@
+Known Channel Params (appear to be Base64 encoded)
+
+EghmZWF0dXJlZA%3D%3D    featured
+EgZ2aWRlb3M%3D          videos
+EglwbGF5bGlzdHM%3D      playlists
+Egljb21tdW5pdHk%3D      community
+EgVzdG9yZQ%3D%3D        store
+EghjaGFubmVscw%3D%3D	channels
+EgpkaXNjdXNzaW9u        discussion
+EgVhYm91dA%3D%3D        about
