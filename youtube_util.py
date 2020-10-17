@@ -1,5 +1,6 @@
 from json import loads
 from urllib.parse import unquote
+from time import sleep
 
 import requests
 
@@ -17,12 +18,18 @@ def getlver(initialdata: dict):
     try:
         return initialdata["responseContext"]["serviceTrackingParams"][2]["params"][2]["value"]
     except:
-        return "2.20201002.02.01"
+        return "2.20201016.02.00"
 
 def fullyexpand(inputdict: dict, mysession: requests.session, continuationheaders: dict):
     lastrequestj = inputdict
     while "continuations" in lastrequestj.keys():
-        lastrequest = mysession.get("https://www.youtube.com/browse_ajax?continuation="+unquote(lastrequestj["continuations"][0]["nextContinuationData"]["continuation"]), headers=continuationheaders)
+        while True:
+            lastrequest = mysession.get("https://www.youtube.com/browse_ajax?continuation="+unquote(lastrequestj["continuations"][0]["nextContinuationData"]["continuation"]), headers=continuationheaders)
+            if lastrequest.status_code == 200:
+                break
+            else:
+                print("Non-200 API status code, waiting 30 seconds before retrying...")
+                sleep(30)
         lastrequestj = lastrequest.json()[1]["response"]["continuationContents"]["gridContinuation"]
         inputdict["items"].extend(lastrequestj["items"])
 
