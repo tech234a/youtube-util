@@ -1,5 +1,6 @@
 from requests import session
 from youtube_util import getinitialdata, fullyexpand, getapikey, getlver
+from time import sleep
 
 mysession = session()
 #extract latest version automatically
@@ -24,7 +25,14 @@ def process_channel(channelid: str):
 
     # PLAYLISTS
     data = {"context":{"client":{"hl":"en","gl":"US","clientName":"WEB","clientVersion":API_VERSION}},"browseId":channelid,"params":"EglwbGF5bGlzdHM%3D"}
-    initdata = mysession.post("https://www.youtube.com/youtubei/v1/browse", params=params, json=data).json()
+    while True:
+        initdata = mysession.post("https://www.youtube.com/youtubei/v1/browse", params=params, json=data)
+        if initdata.status_code == 200:
+            initdata = initdata.json()
+            break
+        else:
+            print("Non-200 API status code, waiting 30 seconds before retrying...")
+            sleep(30)
 
 
     CHANNELS_ID = 0
@@ -56,7 +64,17 @@ def process_channel(channelid: str):
                     channellist.add(playlist["gridPlaylistRenderer"]["shortBylineText"]["runs"][0]["navigationEndpoint"]["browseEndpoint"]["browseId"])
 
     for item in shelfres:
-        shelfiteminitdata = getinitialdata(mysession.get("https://www.youtube.com/"+str(item)).text)
+        while True:
+            shelfintp = mysession.get("https://www.youtube.com/"+str(item))
+            if not """</div><div id="content" class="  content-alignment" role="main"><p class='largeText'>Sorry for the interruption. We have been receiving a large volume of requests from your network.</p>
+
+<p>To continue with your YouTube experience, please fill out the form below.</p>""" in shelfintp.text and shelfintp.status_code == 200:
+                break
+            else:
+                print("Non-200 status code, waiting 30 seconds before retrying...")
+                sleep(30)
+
+        shelfiteminitdata = getinitialdata(shelfintp.text)
         playlistsint = fullyexpand(shelfiteminitdata["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][PLAYLISTS_ID]["tabRenderer"]["content"]["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"][0]["gridRenderer"], mysession, continuationheaders)["items"]
 
         for playlist in playlistsint:
@@ -67,9 +85,16 @@ def process_channel(channelid: str):
     # CHANNELS
     cshelfres = set()
 
-        # PLAYLISTS
+    # PLAYLISTS
     data = {"context":{"client":{"hl":"en","gl":"US","clientName":"WEB","clientVersion":API_VERSION}},"browseId":channelid,"params":"EghjaGFubmVscw%3D%3D"}
-    initdata = mysession.post("https://www.youtube.com/youtubei/v1/browse", params=params, json=data).json()
+    while True:
+        initdata = mysession.post("https://www.youtube.com/youtubei/v1/browse", params=params, json=data)
+        if initdata.status_code == 200:
+            initdata = initdata.json()
+            break
+        else:
+            print("Non-200 API status code, waiting 30 seconds before retrying...")
+            sleep(30)
 
     shelflist = initdata["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][CHANNELS_ID]["tabRenderer"]["content"]["sectionListRenderer"]["contents"]
 
@@ -84,7 +109,17 @@ def process_channel(channelid: str):
                 channellist.add(channel["gridChannelRenderer"]["channelId"])
 
     for item in cshelfres:
-        shelfiteminitdata = getinitialdata(mysession.get("https://www.youtube.com/"+str(item)).text)
+        while True:
+            shelfintc = mysession.get("https://www.youtube.com/"+str(item))
+            if not """</div><div id="content" class="  content-alignment" role="main"><p class='largeText'>Sorry for the interruption. We have been receiving a large volume of requests from your network.</p>
+
+<p>To continue with your YouTube experience, please fill out the form below.</p>""" in shelfintc.text and shelfintc.status_code == 200:
+                break
+            else:
+                print("Non-200 status code, waiting 30 seconds before retrying...")
+                sleep(30)
+
+        shelfiteminitdata = getinitialdata(shelfintc.text)
         chanlistint = fullyexpand(shelfiteminitdata["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][CHANNELS_ID]["tabRenderer"]["content"]["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"][0]["gridRenderer"], mysession, continuationheaders)["items"]
 
         for channel in chanlistint:
