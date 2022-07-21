@@ -14,8 +14,6 @@ params = (
 
 API_VERSION = getlver(getinitialdata(homepage))
 
-continuationheaders = {"x-youtube-client-name": "1", "x-youtube-client-version": API_VERSION, "Accept-Language": "en-US"}
-
 del homepage
 
 def process_channel(channelid: str):
@@ -56,7 +54,7 @@ def process_channel(channelid: str):
         if "shelfRenderer" in itemint.keys():
             shelfres.add(itemint["shelfRenderer"]["title"]["runs"][0]["navigationEndpoint"]["commandMetadata"]["webCommandMetadata"]["url"])
         elif "gridRenderer" in itemint.keys():
-            playlistsint = fullyexpand(itemint["gridRenderer"], mysession, continuationheaders)["items"]
+            playlistsint = fullyexpand(itemint["gridRenderer"], mysession, params, API_VERSION)["items"]
 
             for playlist in playlistsint:
                 playlists.add(playlist["gridPlaylistRenderer"]["playlistId"])
@@ -75,7 +73,7 @@ def process_channel(channelid: str):
                 sleep(30)
 
         shelfiteminitdata = getinitialdata(shelfintp.text)
-        playlistsint = fullyexpand(shelfiteminitdata["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][PLAYLISTS_ID]["tabRenderer"]["content"]["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"][0]["gridRenderer"], mysession, continuationheaders)["items"]
+        playlistsint = fullyexpand(shelfiteminitdata["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][PLAYLISTS_ID]["tabRenderer"]["content"]["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"][0]["gridRenderer"], mysession, params, API_VERSION)["items"]
 
         for playlist in playlistsint:
             playlists.add(playlist["gridPlaylistRenderer"]["playlistId"])
@@ -103,7 +101,7 @@ def process_channel(channelid: str):
         if "shelfRenderer" in itemint.keys():
             cshelfres.add(itemint["shelfRenderer"]["title"]["runs"][0]["navigationEndpoint"]["commandMetadata"]["webCommandMetadata"]["url"])
         elif "gridRenderer" in itemint.keys():
-            chanlistint = fullyexpand(itemint["gridRenderer"], mysession, continuationheaders)["items"]
+            chanlistint = fullyexpand(itemint["gridRenderer"], mysession, params, API_VERSION)["items"]
 
             for channel in chanlistint:
                 channellist.add(channel["gridChannelRenderer"]["channelId"])
@@ -120,7 +118,7 @@ def process_channel(channelid: str):
                 sleep(30)
 
         shelfiteminitdata = getinitialdata(shelfintc.text)
-        chanlistint = fullyexpand(shelfiteminitdata["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][CHANNELS_ID]["tabRenderer"]["content"]["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"][0]["gridRenderer"], mysession, continuationheaders)["items"]
+        chanlistint = fullyexpand(shelfiteminitdata["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][CHANNELS_ID]["tabRenderer"]["content"]["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"][0]["gridRenderer"], mysession, params, API_VERSION)["items"]
 
         for channel in chanlistint:
             channellist.add(channel["gridChannelRenderer"]["channelId"])
@@ -142,7 +140,7 @@ if __name__ == "__main__":
 
 # UCJqV2-l0jqAa7uYN8IGJW7w TONS OF SUBSCRIPTIONS, no featured channels
 
-# UC_1nZUpPS6jFv5Pn3f85CaA TONS OF SUBSCRIPTIONS, some featured channels
+# UC_1nZUpPS6jFv5Pn3f85CaA tons of playlists, no featured channels or subscriptions
 
 # UCJOh5FKisc0hUlEeWFBlD-w no subscriptions, plenty of featured channels
 

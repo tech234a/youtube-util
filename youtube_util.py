@@ -1,13 +1,12 @@
 from json import loads
-from urllib.parse import unquote
 from time import sleep
 
 import requests
 
 def getinitialdata(html: str):
     for line in html.splitlines():
-        if line.strip().startswith('window["ytInitialData"] = '):
-            return loads(line.split('window["ytInitialData"] = ', 1)[1].strip()[:-1])
+        if 'var ytInitialData = ' in line.strip():
+            return loads(line.split('var ytInitialData = ', 1)[1].split(";</script><script ", 1)[0])
     return {}
 
 def getapikey(html: str):
@@ -18,19 +17,22 @@ def getlver(initialdata: dict):
     try:
         return initialdata["responseContext"]["serviceTrackingParams"][2]["params"][2]["value"]
     except:
-        return "2.20201016.02.00"
+        return "2.20220720.00.00"
 
-def fullyexpand(inputdict: dict, mysession: requests.session, continuationheaders: dict):
-    lastrequestj = inputdict
-    while "continuations" in lastrequestj.keys():
+def fullyexpand(inputdict: dict, mysession: requests.session, params: tuple, API_VERSION: str):
+    lastrequestj = inputdict["items"]
+    
+    while "continuationItemRenderer" in lastrequestj[-1].keys():
         while True:
-            lastrequest = mysession.get("https://www.youtube.com/browse_ajax?continuation="+unquote(lastrequestj["continuations"][0]["nextContinuationData"]["continuation"]), headers=continuationheaders)
+            data = {"context":{"client":{"hl":"en","gl":"US","clientName":"WEB","clientVersion":API_VERSION}},"continuation": lastrequestj[-1]["continuationItemRenderer"]["continuationEndpoint"]["continuationCommand"]["token"]}
+            lastrequest = mysession.post("https://www.youtube.com/youtubei/v1/browse", params=params, json=data)
             if lastrequest.status_code == 200:
                 break
             else:
                 print("Non-200 API status code, waiting 30 seconds before retrying...")
                 sleep(30)
-        lastrequestj = lastrequest.json()[1]["response"]["continuationContents"]["gridContinuation"]
-        inputdict["items"].extend(lastrequestj["items"])
+        lastrequestj = lastrequest.json()["onResponseReceivedActions"][0]["appendContinuationItemsAction"]["continuationItems"]
+        inputdict["items"].pop()
+        inputdict["items"].extend(lastrequestj)
 
     return inputdict
