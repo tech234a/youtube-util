@@ -52,7 +52,7 @@ def process_channel(channelid: str):
     for item in shelflist:
         itemint = item["itemSectionRenderer"]["contents"][0]
         if "shelfRenderer" in itemint.keys():
-            shelfres.add(itemint["shelfRenderer"]["title"]["runs"][0]["navigationEndpoint"]["commandMetadata"]["webCommandMetadata"]["url"])
+            shelfres.add(itemint["shelfRenderer"]["title"]["runs"][0]["navigationEndpoint"]["browseEndpoint"]["params"])
         elif "gridRenderer" in itemint.keys():
             playlistsint = fullyexpand(itemint["gridRenderer"], mysession, params, API_VERSION)["items"]
 
@@ -62,17 +62,8 @@ def process_channel(channelid: str):
                     channellist.add(playlist["gridPlaylistRenderer"]["shortBylineText"]["runs"][0]["navigationEndpoint"]["browseEndpoint"]["browseId"])
 
     for item in shelfres:
-        while True:
-            shelfintp = mysession.get("https://www.youtube.com/"+str(item))
-            if not """</div><div id="content" class="  content-alignment" role="main"><p class='largeText'>Sorry for the interruption. We have been receiving a large volume of requests from your network.</p>
-
-<p>To continue with your YouTube experience, please fill out the form below.</p>""" in shelfintp.text and shelfintp.status_code == 200:
-                break
-            else:
-                print("Non-200 status code, waiting 30 seconds before retrying...")
-                sleep(30)
-
-        shelfiteminitdata = getinitialdata(shelfintp.text)
+        data = {"context":{"client":{"hl":"en","gl":"US","clientName":"WEB","clientVersion":API_VERSION}},"browseId":channelid,"params":item}
+        shelfiteminitdata = mysession.post("https://www.youtube.com/youtubei/v1/browse", params=params, json=data).json()
         playlistsint = fullyexpand(shelfiteminitdata["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][PLAYLISTS_ID]["tabRenderer"]["content"]["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"][0]["gridRenderer"], mysession, params, API_VERSION)["items"]
 
         for playlist in playlistsint:
@@ -99,7 +90,7 @@ def process_channel(channelid: str):
     for item in shelflist:
         itemint = item["itemSectionRenderer"]["contents"][0]
         if "shelfRenderer" in itemint.keys():
-            cshelfres.add(itemint["shelfRenderer"]["title"]["runs"][0]["navigationEndpoint"]["commandMetadata"]["webCommandMetadata"]["url"])
+            cshelfres.add(itemint["shelfRenderer"]["title"]["runs"][0]["navigationEndpoint"]["browseEndpoint"]["params"])
         elif "gridRenderer" in itemint.keys():
             chanlistint = fullyexpand(itemint["gridRenderer"], mysession, params, API_VERSION)["items"]
 
@@ -107,17 +98,8 @@ def process_channel(channelid: str):
                 channellist.add(channel["gridChannelRenderer"]["channelId"])
 
     for item in cshelfres:
-        while True:
-            shelfintc = mysession.get("https://www.youtube.com/"+str(item))
-            if not """</div><div id="content" class="  content-alignment" role="main"><p class='largeText'>Sorry for the interruption. We have been receiving a large volume of requests from your network.</p>
-
-<p>To continue with your YouTube experience, please fill out the form below.</p>""" in shelfintc.text and shelfintc.status_code == 200:
-                break
-            else:
-                print("Non-200 status code, waiting 30 seconds before retrying...")
-                sleep(30)
-
-        shelfiteminitdata = getinitialdata(shelfintc.text)
+        data = {"context":{"client":{"hl":"en","gl":"US","clientName":"WEB","clientVersion":API_VERSION}},"browseId":channelid,"params":item}
+        shelfiteminitdata = mysession.post("https://www.youtube.com/youtubei/v1/browse", params=params, json=data).json()
         chanlistint = fullyexpand(shelfiteminitdata["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][CHANNELS_ID]["tabRenderer"]["content"]["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"][0]["gridRenderer"], mysession, params, API_VERSION)["items"]
 
         for channel in chanlistint:
